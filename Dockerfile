@@ -1,18 +1,17 @@
 FROM debian:bookworm-slim
 
+ARG XRAY_VERSION=1.8.24
+
 RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y wget curl git python3 python3-pip neofetch && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get install -y ca-certificates curl unzip && \
+    curl -fsSL "https://github.com/XTLS/Xray-core/releases/download/v${XRAY_VERSION}/Xray-linux-64.zip" -o /tmp/xray.zip && \
+    unzip -q /tmp/xray.zip -d /tmp/xray && \
+    install -m 0755 /tmp/xray/xray /usr/local/bin/xray && \
+    rm -rf /tmp/xray /tmp/xray.zip /var/lib/apt/lists/*
 
-RUN wget -qO /bin/ttyd https://github.com/tsl0922/ttyd/releases/download/1.7.3/ttyd.x86_64 && \
-    chmod +x /bin/ttyd
-
-RUN echo "neofetch" >> /root/.bashrc && \
-    echo "cd /root" >> /root/.bashrc
+COPY start.sh /usr/local/bin/start-xray
+RUN chmod +x /usr/local/bin/start-xray
 
 EXPOSE $PORT
 
-CMD ["/bin/bash", "-c", "\
-    echo \"export PS1='\\[\\033[01;31m\\]$USERNAME@\\h\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\$ '\" >> /root/.bashrc && \
-    /bin/ttyd -p $PORT -c $USERNAME:$PASSWORD /bin/bash"]
+CMD ["/usr/local/bin/start-xray"]
